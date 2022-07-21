@@ -15,9 +15,14 @@ def test(x, y, n):
     return np.matmul(const_window, current_position) % n
 
 
-watermark = cv2.imread('watermark_gray.png')
+watermark = cv2.imread('watermark_binary.jpg', cv2.IMREAD_GRAYSCALE)
+lena = cv2.imread('lena.png', cv2.IMREAD_GRAYSCALE)
+print(watermark.shape)
+print(lena.shape)
 
-gray = helper.to_gray(watermark)
+test = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
 
-
-print(gray.shape)
+print(test)
+print(np.amax(test))
+print(np.amin(test))
+print(np.average(test))

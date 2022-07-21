@@ -27,6 +27,16 @@ I1 = 80
 
 I2 = 160
 
+pairs = [[(0, 2), (2, 1)]]
+
+a = 1
+
+b = 8
+
+c = 10
+
+d = 20
+
 
 def scramble_pixels(x, y, n):
     current_position = np.array([[x], [y]])
@@ -62,8 +72,34 @@ def image_8_x_8_division(image):
     return blocks
 
 
+def get_adaptive_adjustment_coefficient(block):
+    beta = get_beta(block)
+    ave = np.average(block)
+    w = webber_ratio
+    if ave < I1:
+        w = ((beta - webber_ratio) * pow((ave - I1), 2)) / (I2 * I2) + webber_ratio
+    if ave >= I2:
+        w = ((beta - webber_ratio) * pow((ave - I2), 2)) / pow((255 - I2), 2) + webber_ratio
+    return w
+
+
+def get_entropy(block):
+    Ent = 0
+    # calculate entropy and ajust it to [a,b]
+    return None
+
+
 def embed_watermark(watermark, image, key):
     scrambled_watermark = arnold_transform(watermark, key)
     blocks = image_8_x_8_division(image)
 
     return None
+
+
+
+def get_masking_factor(image):
+    return None
+
+
+def get_beta(image):
+    return np.amax(image) - np.amin(image)
