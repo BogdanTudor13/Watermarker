@@ -5,24 +5,33 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import matplotlib
 
-matplotlib.use('TkAgg')
+original_image = cv2.imread('lena.png', cv2.IMREAD_GRAYSCALE)
+origianl_watermark = cv2.imread('bgd_tdr.png', cv2.IMREAD_GRAYSCALE)
+watermark_binary = helper.to_binary(origianl_watermark)
+output_image = cv2.imread('output.png', cv2.IMREAD_GRAYSCALE)
+numbered_key = 12
 
 
-def test(x, y, n):
-    current_position = np.array([[x], [y]])
-    const_window = np.array([[1, 1], [1, 2]])
+def exec_embeding(image, watermark, key):
+    result = helper.embed_watermark(watermark, image, key)
+    cv2.imwrite('output.png', result)
 
-    return np.matmul(const_window, current_position) % n
+    return None
 
 
-watermark = cv2.imread('watermark_binary.jpg', cv2.IMREAD_GRAYSCALE)
-lena = cv2.imread('lena.png', cv2.IMREAD_GRAYSCALE)
-print(watermark.shape)
-print(lena.shape)
+def exec_extracting(image, key):
+    result = helper.extract_watermark(embeded_image=image, k=key)
+    result = result * 255
 
-test = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
+    cv2.imwrite('extracted_wmk.png', result)
+    return None
 
-print(test)
-print(np.amax(test))
-print(np.amin(test))
-print(np.average(test))
+
+# exec_embeding(original_image, watermark_binary, 7)
+exec_extracting(image=output_image, key=7)
+
+# matrix = np.array([[1, 2], [3, 4]])
+# arnold = helper.arnold_transform(matrix, 2)
+# print(arnold)
+# reverse = helper.reverse_arnold(arnold, 2)
+# print(reverse)
