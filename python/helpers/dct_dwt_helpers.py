@@ -21,6 +21,12 @@ def embed_watermark(watermark, image, alpha, seed1, seed2):
 
     blocks = image_4_x_4_division(cV2)
     dct_blocks = apply_dct_to_blocks(blocks)
+    means = []
+    for block in dct_blocks:
+        means.append(np.mean(block))
+    mean_mean = np.mean(means)
+    max_mean = np.max(means)
+    min_mean = np.min(means)
     binary_watermark = to_binary(watermark)
     pn0, pn1 = generate_pseudorandom_sequences(seed1=seed1, seed2=seed2, length=4)
     dct_blocks = embed_pseudorandom_sequences(dct_blocks, pn0, pn1, binary_watermark, alpha)
@@ -101,11 +107,15 @@ def to_binary(image):
 def generate_pseudorandom_sequences(seed1, seed2, length):
     pn0 = []
     pn1 = []
-    for i in range(0, length):
-        random.seed(seed1 + i)
-        pn0.append(random.random())
-        random.seed(seed2 + i)
-        pn1.append(random.random())
+    # for i in range(0, length):
+    #     random.seed(seed1 + i)
+    #     pn0.append(random.random())
+    #     random.seed(seed2 + i)
+    #     pn1.append(random.random())
+    np.random.seed(seed1)
+    pn0 = np.random.exponential(scale=1, size=(1, length)).tolist()[0]
+    np.random.seed(seed2)
+    pn1 = np.random.logistic(size=(1, length)).tolist()[0]
 
     return pn0, pn1
 

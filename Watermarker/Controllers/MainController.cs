@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System.Linq;
 using Watermarker.Common;
+using Watermarker.Common.DTO;
 using Watermarker.Common.Enums;
 using Watermarker.Services;
 
@@ -20,16 +22,35 @@ namespace Watermarker.Controllers
             pythonModel = new PythonModel()
             {
                 PythonExe = configuration.GetSection("PythonLocation").Value,
-                DctDwt = configuration.GetSection("DctDwlLocation").Value
+                ScriptsLocation = configuration.GetSection("ScriptsLocation").Value,
+                FolderSaveLocation = configuration.GetSection("FolderSaveLocation").Value
             };
             pythonService = new PythonService(pythonModel);
         }
 
-        [HttpGet("exec")]
-        public IActionResult ExecuteScript()
+        [HttpPost("exec")]
+        public IActionResult ExecuteScript(Configuration model)
         {
-            var result = pythonService.ExecuteScript(string.Empty, AlgorithmsEnum.DCT_DWT);
+            var result = pythonService.ExecuteScript(model);
             return Ok(result);
+        }
+
+        [HttpPost("ping")]
+        public IActionResult Ping(Configuration model)
+        {
+            var stringContent = model.Content.Split(",");
+            model.ArrayContent = new byte[stringContent.Length];
+            for (var index = 0; index < stringContent.Length; index++)
+            {
+                model.ArrayContent[index] = byte.Parse(stringContent[index]);
+            }
+            var watermarkContent = model.Watermark.Split(",");
+            model.WatermarkContent = new byte[watermarkContent.Length];
+            for (var index = 0; index < watermarkContent.Length; index++)
+            {
+                model.WatermarkContent[index] = byte.Parse(stringContent[index]);
+            }
+            return Ok(model);
         }
     }
 }

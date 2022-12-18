@@ -1,10 +1,52 @@
-<app-header>
+<app-navbar></app-navbar>
 
-</app-header>
-<router-outlet>
+<div style="margin-top:35px;"></div>
 
-</router-outlet>
+<div class="container">
+  <div class="card col-md-8 offset-md-2">
+    <div class="card-header">
+      <img src="assets/wrench.png" height="20px;"/> <span style="font-size: larger;">  Setări codare</span> 
+    </div>
+    <div class="card-body offset-md-1">
+      <h5 class="card-title">Selectează configurația</h5>
+      <p class="card-text text-muted">Alegeți configurările corespunzătoare pentru procesul de codare sau decodare al watermarkului.</p>
+      <div class="row" style="margin-bottom:20px;">
+        <div class="dropdown col-md-6">
+          <button class="btn btn-secondary dropdown-toggle" #encodeDropdown type="button" id="isEncodeDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Tipul de acțiune
+          </button>
+          <div class="dropdown-menu" aria-labelledby="isEncodeDropdown">
+            <a class="dropdown-item" style="cursor:pointer;" (click)="selectEncodeDropdown(1)">Inserează watermark</a>
+            <a class="dropdown-item" style="cursor:pointer;" (click)="selectEncodeDropdown(2)">Extrage watermark</a>
+          </div>
+        </div>
+        <div class="dropdown col-md-6">
+          <button class="btn btn-secondary dropdown-toggle" #algorithmDropdown type="button" id="algorithmDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Algoritmul de codare
+          </button>
+          <div class="dropdown-menu" aria-labelledby="algorithmDropdown">
+            <a class="dropdown-item" style="cursor:pointer;" (click)="selectAlgorithmDropdown(1)">DCT + JPEG Quantization table</a>
+            <a class="dropdown-item" style="cursor:pointer;" (click)="selectAlgorithmDropdown(2)">DWT + DCT</a>
+          </div>
+        </div>
+      </div>    
+      <hr>
+      <div class="row" style="margin-top: 30px;">
+        <div class="col-md-9">
+          <span style="margin-right: 20px;">Imaginea originală</span><input type="file" (change)="onImageSelected($event)" />
+        </div>
+      </div> 
+      <hr>
+      <div class="row" style="margin-top: 30px;">
+        <div class="col-md-9">
+          <span style="margin-right: 25px;">Watermark</span><input class="offset-md-1" type="file" (change)="onWatermarkSelected($event)" />
+        </div>
+      </div>  
+      <hr>
+      <div class="row" style="margin-top: 60px;">
+        <button class="btn-danger btn offset-md-4 col-md-3" (click)="submit()" >Execută</button>
+      </div>
+    </div>
+  </div>
 
-<app-footer>
-    
-</app-footer>
+</div>

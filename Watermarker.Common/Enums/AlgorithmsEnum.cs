@@ -8,6 +8,7 @@ namespace Watermarker.Common.Enums
 {
     public enum AlgorithmsEnum
     {
-        DCT_DWT = 1,
+        DCT_JPEG = 1,
+        DCT_DWT = 2
     }
 }
