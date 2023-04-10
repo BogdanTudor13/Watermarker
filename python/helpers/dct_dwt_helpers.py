@@ -15,18 +15,11 @@ import random
 #                             -------------------
 
 def embed_watermark(watermark, image, alpha, seed1, seed2):
-    dct_blocks = []
     (cA, (cH, cV, cD)) = pywt.dwt2(image, wavelet='haar')
     (cA2, (cH2, cV2, cD2)) = pywt.dwt2(cV, wavelet='haar')
 
     blocks = image_4_x_4_division(cV2)
     dct_blocks = apply_dct_to_blocks(blocks)
-    means = []
-    for block in dct_blocks:
-        means.append(np.mean(block))
-    mean_mean = np.mean(means)
-    max_mean = np.max(means)
-    min_mean = np.min(means)
     binary_watermark = to_binary(watermark)
     pn0, pn1 = generate_pseudorandom_sequences(seed1=seed1, seed2=seed2, length=4)
     dct_blocks = embed_pseudorandom_sequences(dct_blocks, pn0, pn1, binary_watermark, alpha)
@@ -36,26 +29,34 @@ def embed_watermark(watermark, image, alpha, seed1, seed2):
 
     embeded_img = reshape_4_x_4_blocks_to_image(idct_blocks, cH2.shape[0])
 
-    cH = pywt.idwt2((cA2, (cH2, embeded_img, cD2)), wavelet='haar')
-    watermarked_img = pywt.idwt2((cA, (cH, cV, cD)), wavelet='haar')
+    cV_m = pywt.idwt2((cA2, (cH2, embeded_img, cD2)), wavelet='haar')
+    watermarked_img = pywt.idwt2((cA, (cH, cV_m, cD)), wavelet='haar')
     return watermarked_img
 
 
-def extract_watermark(image, seed1, seed2):
-    dct_blocks = []
-    (cA, (cH, cV, cD)) = pywt.dwt2(image, wavelet='haar')
-    (cA2, (cH2, cV2, cD2)) = pywt.dwt2(cH, wavelet='haar')
-    blocks = image_4_x_4_division(cH2)
+def extract_watermark(original_image, watermarked_image, seed1, seed2, alpha):
+    (cA, (cH, cV, cD)) = pywt.dwt2(watermarked_image, wavelet='haar')
+    (cA2, (cH2, cV2, cD2)) = pywt.dwt2(cV, wavelet='haar')
+    blocks = image_4_x_4_division(cV2)
 
+    original_dct_blocks = extract_4_x_4_blocks_from_original_image(original_image)
     pn0, pn1 = generate_pseudorandom_sequences(seed1=seed1, seed2=seed2, length=4)
 
     dct_blocks = apply_dct_to_blocks(blocks)
-    flat_watermark = decorelate_pseudorandom_sequences(dct_blocks, pn0, pn1)
+    flat_watermark = decorelate_pseudorandom_sequences(original_dct_blocks, dct_blocks, pn0, pn1, alpha)
     watermark = reconstruct_watermark(flat_watermark)
     if watermark is not None:
         return watermark
 
     return None
+
+
+def extract_4_x_4_blocks_from_original_image(original_image):
+    (cA, (cH, cV, cD)) = pywt.dwt2(original_image, wavelet='haar')
+    (cA2, (cH2, cV2, cD2)) = pywt.dwt2(cV, wavelet='haar')
+    blocks = image_4_x_4_division(cV2)
+    dct_blocks = apply_dct_to_blocks(blocks)
+    return dct_blocks
 
 
 def image_4_x_4_division(image) -> list:
@@ -135,11 +136,11 @@ def embed_pseudorandom_sequences(dct_blocks, pn0, pn1, watermark, alpha):
     return dct_blocks
 
 
-def decorelate_pseudorandom_sequences(dct_blocks, pn0, pn1):
+def decorelate_pseudorandom_sequences(original_dct_blocks, dct_blocks, pn0, pn1, alpha):
     n = len(dct_blocks)
     flat_watermark = []
     for i in range(0, n):
-        flat_watermark.append(extract_midband_coefficient(dct_blocks[i], pn0, pn1))
+        flat_watermark.append(extract_midband_coefficient(original_dct_blocks[i], dct_blocks[i], pn0, pn1, alpha))
 
     return flat_watermark
 
@@ -155,15 +156,18 @@ def embed_midband_coefficient(dct_block, pn, alpha):
     return dct_block
 
 
-def extract_midband_coefficient(dct_block, pn_0, pn_1):
+def extract_midband_coefficient(original_dct_block, dct_block, pn_0, pn_1, alpha):
     mid_matrix = dct_block[1:3, 1:3]
     flat_mid_matrix = mid_matrix.flatten()
-    cor_0 = np.corrcoef(flat_mid_matrix, pn_0)
-    cor_1 = np.corrcoef(flat_mid_matrix, pn_1)
-    cor_0 = np.sum(abs(cor_0))
-    cor_1 = np.sum(abs(cor_1))
 
-    if cor_0 > cor_1:
+    original_mid_matrix = original_dct_block[1:3, 1:3]
+    original_flat_mid_matrix = original_mid_matrix.flatten()
+
+    delta = (flat_mid_matrix - original_flat_mid_matrix) / alpha
+    mse_0 = np.sqrt(np.sum((delta-pn_0)**2))
+    mse_1 = np.sqrt(np.sum((delta-pn_1)**2))
+
+    if mse_0 < mse_1:
         return 0
     return 1
 

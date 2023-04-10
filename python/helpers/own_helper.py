@@ -4,18 +4,18 @@ import pywt
 import random
 
 
-def embed_watermark(key1, key2, key3, key4, image, watermark):
+def embed_watermark(key1, key2, key3, key4, image, watermark, alpha):
     binary_watermark = to_binary(watermark)
-    scrambled_watermark = arnold_transform(binary_watermark, key4).flatten().tolist()
+    scrambled_watermark = arnold_transform(binary_watermark, key1).flatten().tolist()
     (cA, (cH, cV, cD)) = pywt.dwt2(image, wavelet='haar')
     (m, n) = cV.shape
     blocks = image_8_x_8_division(cV)
     dct_blocks = apply_dct_to_blocks(blocks)
     altered_blocks = [0] * len(dct_blocks)
-    I, J, pn = generate_random_positions_and_weights(seed1=key1, seed2=key2, seed3=key3, N=len(dct_blocks))
+    I, J, pn = generate_random_positions_and_weights(seed1=key2, seed2=key3, seed3=key4, N=len(dct_blocks))
     for i in range(0, len(dct_blocks)):
         block = dct_blocks[i]
-        block[I[i], J[i]] = abs(pn[i]) * (-1) ** scrambled_watermark[i]
+        block[I[i], J[i]] += (alpha * abs(pn[i])) * (-1) ** scrambled_watermark[i]
         altered_blocks[i] = block
 
     idct_blocks = []
@@ -28,15 +28,21 @@ def embed_watermark(key1, key2, key3, key4, image, watermark):
     return reconstructed_image
 
 
-def extract_watermark(key1, key2, key3, key4, image):
+def extract_watermark(key1, key2, key3, original_image, image):
     (cA, (cH, cV, cD)) = pywt.dwt2(image, wavelet='haar')
+    (o_cA, (o_cH, o_cV, o_cD)) = pywt.dwt2(original_image, wavelet='haar')
     blocks = image_8_x_8_division(cV)
+    o_blocks = image_8_x_8_division(o_cV)
     dct_blocks = apply_dct_to_blocks(blocks)
-    I, J, pn = generate_random_positions_and_weights(seed1=key1, seed2=key2, seed3=key3, N=len(dct_blocks))
+    o_dct_blocks = apply_dct_to_blocks(o_blocks)
+
+    I, J, pn = generate_random_positions_and_weights(seed1=key2, seed2=key3, seed3=0, N=len(dct_blocks))
+
     scrambled_watermark = []
     for i in range(0, len(dct_blocks)):
         block = dct_blocks[i]
-        if block[I[i], J[i]] > 0:
+        o_block = o_dct_blocks[i]
+        if block[I[i], J[i]] - o_block[I[i], J[i]] > 0:
             scrambled_watermark.append(0)
         else:
             scrambled_watermark.append(1)
@@ -45,7 +51,7 @@ def extract_watermark(key1, key2, key3, key4, image):
     for i in range(0, n):
         for j in range(0, n):
             watermark_image[i, j] = scrambled_watermark[i * n + j]
-    watermark = reverse_arnold(watermark_image, key4)
+    watermark = reverse_arnold(watermark_image, key1)
     return watermark
 
 
