@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -19,11 +21,13 @@ namespace Watermarker.Services
             this.pythonModel = pythonModel;
         }
 
+
+
         public string ExecuteScript(Configuration configuration)
         {
             ConvertString2ByteArray(configuration);
 
-            var scriptDotPy = GetScript(configuration);
+            var scriptDotPy = string.Empty;// GetScript(configuration);
 
             var startInfo = new ProcessStartInfo
             {
@@ -43,13 +47,13 @@ namespace Watermarker.Services
             }
         }
 
-        public string GetScript(Configuration configuration)
+        public string GetScript(WatermarkRequest request)
         {
             StringBuilder pythonScript = new(pythonModel.ScriptsLocation);
 
-            pythonScript.Append(((AlgorithmsEnum)configuration.Algorithm).ToString());
+            //pythonScript.Append(((AlgorithmsEnum)request.Algorithm).ToString());
             
-            pythonScript.Append(configuration.IsEncode ? "_encode" : "_decode");
+            pythonScript.Append(request.IsEncode ? "_encode" : "_decode");
             pythonScript.Append(".py");
 
             return pythonScript.ToString();
