@@ -16,7 +16,10 @@ export class AppComponent implements OnInit {
   @ViewChild("algorithmDropdown") algorithmDropdown : ElementRef;
 
   configuration:Configuration = new Configuration();
-
+  key1: number;
+  key2: number;
+  key3: number;
+  key4: number;
   ngOnInit(): void {
   }
 
@@ -44,6 +47,10 @@ export class AppComponent implements OnInit {
       this.algorithmDropdown.nativeElement.innerText = 'DWT + DCT'
       this.configuration.isAlgorithmSelected = true;
     }
+    if(option == 3){
+      this.algorithmDropdown.nativeElement.innerText = 'Algoritm propriu dezvoltat'
+      this.configuration.isAlgorithmSelected = true;
+    }
     this.configuration.algorithm = option;
   }
 
@@ -52,29 +59,30 @@ export class AppComponent implements OnInit {
     console.log(this.configuration);
     this.configuration.isContentUpload = true;
 
-    var file = event.target.files[0];
-    var fileReader = new FileReader();
-    fileReader.readAsArrayBuffer(file);
-    fileReader.onload = () =>{
-      if(fileReader.result && fileReader.result instanceof ArrayBuffer){
-        this.configuration.content = new Uint8Array(fileReader.result);
-      }
-    }
+    this.configuration.content = event.target.files[0];
+    // var file = event.target.files[0];
+    // var fileReader = new FileReader();
+    // fileReader.readAsArrayBuffer(file);
+    // fileReader.onload = () =>{
+    //   if(fileReader.result && fileReader.result instanceof ArrayBuffer){
+    //     this.configuration.content = new Uint8Array(fileReader.result);
+    //   }
+    // }
   }
 
   onWatermarkSelected(event:any){
     this.configuration.watermark = event.target.files[0];
     console.log(this.configuration);
     this.configuration.isWatermarkUpload = true;
-
-    var file = event.target.files[0];
-    var fileReader = new FileReader();
-    fileReader.readAsArrayBuffer(file);
-    fileReader.onload = () =>{
-      if(fileReader.result && fileReader.result instanceof ArrayBuffer){
-        this.configuration.watermark = new Uint8Array(fileReader.result);
-      }
-    }
+    this.configuration.watermark = event.target.files[0];
+    // var file = event.target.files[0];
+    // var fileReader = new FileReader();
+    // fileReader.readAsArrayBuffer(file);
+    // fileReader.onload = () =>{
+    //   if(fileReader.result && fileReader.result instanceof ArrayBuffer){
+    //     this.configuration.watermark = new Uint8Array(fileReader.result);
+    //   }
+    // }
   }
 
   submit(){
@@ -82,13 +90,22 @@ export class AppComponent implements OnInit {
     if(!validator.isValid){
       return;
     }
-
     
-    this.configuration.content = this.configuration.content?.toString() ?? '';
-    this.configuration.watermark = this.configuration.watermark?.toString() ?? '';
+    this.configuration.key1 = this.key1;
+    this.configuration.key2 = this.key2;
+    this.configuration.key3 = this.key3;
+    this.configuration.key4 = this.key4;
 
-
-    this.apiService.ping(this.configuration).subscribe()
+    const formData = new FormData();
+    formData.append('originalImage', this.configuration.content);
+    formData.append('watermarkImage', this.configuration.watermark);
+    formData.append('key1', this.key1.toString());
+    formData.append('key2', this.key2?.toString() ?? '');
+    formData.append('key3', this.key3?.toString() ?? '');
+    formData.append('key4', this.key4?.toString() ?? '');
+    formData.append('algorithmKey', this.configuration.algorithm.toString());
+    formData.append('isEncode', this.configuration.isEncode?.toString() ?? '');
+    this.apiService.exec(formData, this.configuration.isEncode);
     //send to API
   }
 
